@@ -1,6 +1,12 @@
 [package]
 name = "sopnac"
 version = "0.1.0"
-edition = "2024"
+edition = "2021"
+description = "Sopnac: the native compiler for Soplang. Compiles .sop files to machine code."
 
 [dependencies]
+cranelift = "0.105.1"
+cranelift-module = "0.105.1"
+cranelift-object = "0.105.1"
+target-lexicon = "0.12"
+anyhow = "1.0"
