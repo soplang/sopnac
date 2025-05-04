@@ -1,29 +1,33 @@
 mod compiler;
 
+use anyhow::{bail, Result};
 use std::env;
 use std::fs;
-use anyhow::Result;
+use std::path::Path;
 
 fn main() -> Result<()> {
-    let args: Vec<String> = env::args().collect();
-    if args.len() != 2 {
-        eprintln!("Isticmaal: sopnac <file.sop>");
-        std::process::exit(1);
+    /* --------- simple CLI parsing --------- */
+    let mut args = env::args().skip(1).collect::<Vec<_>>();
+    if args.is_empty() {
+        bail!("Usage: sopnac <file.sop> [-o output_name]");
     }
 
-    let input = &args[1];
-    let code = fs::read_to_string(input)?;
-    println!("Keenaya koodhka: {}", input);
+    let source = args.remove(0);
+    let output = if args.len() >= 2 && args[0] == "-o" {
+        args.remove(0);            // remove "-o"
+        args.remove(0)             // take name after -o
+    } else {
+        // default: same name without extension
+        Path::new(&source)
+            .file_stem()
+            .unwrap()
+            .to_string_lossy()
+            .into()
+    };
 
-    compiler::compile_to_binary(&code, "output.o")?;
-    println!("Waxaa la sameeyay: output.o (object file)");
-
-    // Link to executable (requires system linker like `cc`)
-    std::process::Command::new("cc")
-        .args(&["output.o", "-o", "output"])
-        .status()?;
-
-    println!("✅ Faylka la fulin karo: ./output");
-
+    /* --------- compile --------- */
+    let code = fs::read_to_string(&source)?;
+    compiler::compile_and_link(&code, &output)?;
+    println!("✅ executable generated: ./{}", output);
     Ok(())
 }

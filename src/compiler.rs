@@ -5,8 +5,27 @@ use target_lexicon::Triple;
 use anyhow::Result;
 use std::fs::File;
 use std::io::Write;
+use std::process::Command;
+use tempfile::NamedTempFile;      // add `tempfile = "3"` to Cargo.toml
 
-pub fn compile_to_binary(input: &str, output: &str) -> Result<()> {
+pub fn compile_and_link(code: &str, exe_name: &str) -> Result<()> {
+    // 1. create a temp object file
+    let obj_file = NamedTempFile::new()?;
+    let obj_path = obj_file.path().to_str().unwrap().to_owned();
+
+    // 2. generate machine code into that object
+    compile_to_object(code, &obj_path)?;
+
+    // 3. invoke system linker (cc) -> final binary
+    Command::new("cc")
+        .args(&[&obj_path, "-o", exe_name])
+        .status()?;
+
+    // 4. temp file auto‑deleted when `obj_file` drops
+    Ok(())
+}
+
+pub fn compile_to_object(input: &str, obj_path: &str) -> Result<()> {
     /* ---------- parse: qor("Text") ---------- */
     let trimmed = input.trim();
     let content = if trimmed.starts_with("qor(\"") && trimmed.ends_with("\")") {
