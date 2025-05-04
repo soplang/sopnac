@@ -1,3 +1,5 @@
+mod compiler;
+
 use std::env;
 use std::fs;
 use anyhow::Result;
@@ -9,10 +11,19 @@ fn main() -> Result<()> {
         std::process::exit(1);
     }
 
-    let filename = &args[1];
-    let code = fs::read_to_string(filename)?;
-    println!("Waqti aan ka shaqeyno koodhka: {}", filename);
-    println!("Waxaa ku jira:\n{}", code);
+    let input = &args[1];
+    let code = fs::read_to_string(input)?;
+    println!("Keenaya koodhka: {}", input);
+
+    compiler::compile_to_binary(&code, "output.o")?;
+    println!("Waxaa la sameeyay: output.o (object file)");
+
+    // Link to executable (requires system linker like `cc`)
+    std::process::Command::new("cc")
+        .args(&["output.o", "-o", "output"])
+        .status()?;
+
+    println!("✅ Faylka la fulin karo: ./output");
 
     Ok(())
 }
