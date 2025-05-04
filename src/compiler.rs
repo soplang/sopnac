@@ -86,6 +86,6 @@ pub fn compile_to_object(input: &str, obj_path: &str) -> Result<()> {
     let obj = module.finish();
     let bytes = obj.emit()?;
 
-    File::create(output)?.write_all(&bytes)?;
+    File::create(obj_path)?.write_all(&bytes)?;
     Ok(())
 }
